@@ -32,7 +32,7 @@ func Init () (func (string), func (string, string)) {
 // You can pass the value of the Accept-Language http header
 // TODO: be more appreciative to the languages listed in the Accept-Language header;
 // currently only the main group of the language first listed is considered
-func Language (language string) func (string) string {
+func Language (language string) ((func (string) string), string) {
   language = strings.Split(language, ",")[0]
   language = strings.Split(language, ";")[0]
   language = strings.Split(language, "-")[0]
@@ -40,5 +40,5 @@ func Language (language string) func (string) string {
     value, ok := messages[key][language]
     if ok {return value}
     return "X-" + key
-  }
+  }, language
 }
