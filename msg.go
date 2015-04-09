@@ -34,31 +34,37 @@ type languageType struct {
   Sub string
 }
 
-// Call Lang to create the lookup function for the concerning language to use in your templates
+var languages = map[string]languageType{}
+
 // You can pass the value of the Accept-Language http header
 // TODO: be more appreciative to the languages listed in the Accept-Language header;
 // currently only the main group of the language first listed is considered
-func Language (accept_language string) (msg func (string) string, lang languageType) {
-  accept_language = strings.Split(accept_language, ",")[0]
-  accept_language = strings.Split(accept_language, ";")[0]
-  first_language := strings.Split(accept_language, "-")
-  lang = languageType{
-    Full: accept_language,
-    Main: first_language[0],
+func Language (accept_language string) (lang languageType) {
+  var ok bool
+  if lang, ok = languages[accept_language]; !(ok) {
+    first_language := strings.Split(accept_language, ",")[0] // cut other languages
+    first_language = strings.Split(first_language, ";")[0] // cut the q parameter
+    parts := strings.Split(first_language, "-")
+    lang = languageType{
+      Full: first_language,
+      Main: parts[0],
+    }
+    if len(parts) > 1 {
+      lang.Sub = parts[1]
+    }
+    languages[accept_language] = lang
   }
-  if len(first_language) > 1 {
-    lang.Sub = first_language[1]
-  }
-  msg = func (key string) (value string) {
-    var ok bool
-    if value, ok = messages[key][lang.Main]; !(ok) {
-      if value, ok = messages[key][lang.Sub]; !(ok) {
-        if value, ok = messages[key][lang.Full]; !(ok) {
-          value = "X-" + key
-        }
+  return
+}
+
+func Msg (lang languageType, key string) (value string) {
+  var ok bool
+  if value, ok = messages[key][lang.Main]; !(ok) {
+    if value, ok = messages[key][lang.Sub]; !(ok) {
+      if value, ok = messages[key][lang.Full]; !(ok) {
+        value = "X-" + key
       }
     }
-    return
   }
   return
 }
