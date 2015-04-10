@@ -38,7 +38,7 @@ var languages = map[string]languageType{}
 
 // You can pass the value of the Accept-Language http header
 // TODO: be more appreciative to the languages listed in the Accept-Language header;
-// currently only the main group of the language first listed is considered
+//   currently only the language first listed is considered
 func Language (accept_language string) (lang languageType) {
   var ok bool
   if lang, ok = languages[accept_language]; !(ok) {
