@@ -41,7 +41,7 @@ var languages = map[string]languageType{}
 //   currently only the language first listed is considered
 func Language (r *http.Request) (lang languageType) {
   accept_language, ok := r.Header.Get("Accept-Language"), false
-  if lang, ok = languages[accept_language]; !(ok) {
+  if lang, ok = languages[accept_language]; ! ok {
     first_language := strings.Split(accept_language, ",")[0] // cut other languages
     first_language = strings.Split(first_language, ";")[0] // cut the q parameter
     parts := strings.Split(first_language, "-")
@@ -66,9 +66,9 @@ func Msg (r *http.Request) (msg msgFunc) {
   if msg, ok = msgs[lang]; !(ok) {
     msg = func (key string) (value string) {
       var ok bool
-      if value, ok = messages[key][lang.Main]; !(ok) {
-        if value, ok = messages[key][lang.Sub]; !(ok) {
-          if value, ok = messages[key][lang.Full]; !(ok) {
+      if value, ok = messages[key][lang.Main]; ! ok {
+        if value, ok = messages[key][lang.Sub]; ! ok {
+          if value, ok = messages[key][lang.Full]; ! ok {
             value = "X-" + key
           }
         }
