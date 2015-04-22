@@ -2,6 +2,7 @@ package msg
 
 import (
   "strings"
+  "net/http"
 )
 
 type translations map[string]string
@@ -36,10 +37,10 @@ type languageType struct {
 
 var languages = map[string]languageType{}
 
-// You can pass the value of the Accept-Language http header
 // TODO: be more appreciative to the languages listed in the Accept-Language header;
 //   currently only the language first listed is considered
-func Language (accept_language string) (lang languageType) {
+func Language (r *http.Request) (lang languageType) {
+  accept_language := r.Header.Get("Accept-Language")
   var ok bool
   if lang, ok = languages[accept_language]; !(ok) {
     first_language := strings.Split(accept_language, ",")[0] // cut other languages
@@ -57,14 +58,26 @@ func Language (accept_language string) (lang languageType) {
   return
 }
 
-func Msg (lang languageType, key string) (value string) {
+type msgFunc func(string)(string)
+
+var msgs = map[languageType]msgFunc{}
+
+func Msg (r *http.Request) (msg msgFunc) {
+  lang := Language(r)
   var ok bool
-  if value, ok = messages[key][lang.Main]; !(ok) {
-    if value, ok = messages[key][lang.Sub]; !(ok) {
-      if value, ok = messages[key][lang.Full]; !(ok) {
-        value = "X-" + key
+  if msg, ok = msgs[lang]; !(ok) {
+    msg = func (key string) (value string) {
+      var ok bool
+      if value, ok = messages[key][lang.Main]; !(ok) {
+        if value, ok = messages[key][lang.Sub]; !(ok) {
+          if value, ok = messages[key][lang.Full]; !(ok) {
+            value = "X-" + key
+          }
+        }
       }
+      return
     }
+    msgs[lang] = msg
   }
   return
 }
