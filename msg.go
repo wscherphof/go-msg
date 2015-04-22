@@ -63,7 +63,7 @@ var msgs = map[languageType]msgFunc{}
 
 func Msg (r *http.Request) (msg msgFunc) {
   lang, ok := Language(r), false
-  if msg, ok = msgs[lang]; !(ok) {
+  if msg, ok = msgs[lang]; ! ok {
     msg = func (key string) (value string) {
       var ok bool
       if value, ok = messages[key][lang.Main]; ! ok {
