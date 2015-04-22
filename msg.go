@@ -40,8 +40,7 @@ var languages = map[string]languageType{}
 // TODO: be more appreciative to the languages listed in the Accept-Language header;
 //   currently only the language first listed is considered
 func Language (r *http.Request) (lang languageType) {
-  accept_language := r.Header.Get("Accept-Language")
-  var ok bool
+  accept_language, ok := r.Header.Get("Accept-Language"), false
   if lang, ok = languages[accept_language]; !(ok) {
     first_language := strings.Split(accept_language, ",")[0] // cut other languages
     first_language = strings.Split(first_language, ";")[0] // cut the q parameter
@@ -63,8 +62,7 @@ type msgFunc func(string)(string)
 var msgs = map[languageType]msgFunc{}
 
 func Msg (r *http.Request) (msg msgFunc) {
-  lang := Language(r)
-  var ok bool
+  lang, ok := Language(r), false
   if msg, ok = msgs[lang]; !(ok) {
     msg = func (key string) (value string) {
       var ok bool
