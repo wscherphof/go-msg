@@ -9,24 +9,24 @@ type translations map[string]string
 
 var messages = make(map[string]translations)
 
-// var m, a = msg.Init()
+// var m, a = msg.Definition()
 // m("Hello")
 // a("en", "Hello, world")
 // a("nl", "Hallo wereld")
 // m("Bye")
 // a("en", "Farewell, cruel world")
 // a("nl", "Vaarwel, wrede wereld")
-func Init () (func (string), func (string, string)) {
+func Definition() (createMessage func(string), addTranslation func(string, string)) {
   var message *translations
-  createMessage := func (key string) {
+  createMessage = func (key string) {
     t := make(translations)
     messages[key] = t
     message = &t
   }
-  addTranslation := func (language string, translation string) {
+  addTranslation = func (language string, translation string) {
     (*message)[language] = translation
   }
-  return createMessage, addTranslation
+  return
 }
 
 type languageType struct {
