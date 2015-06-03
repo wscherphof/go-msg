@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-type translations map[string]string
+type message map[string]string
 
-var messages = make(map[string]translations)
+var messageStore = make(map[string]message, 500)
 
 // var m, a = msg.Definition()
 // m("Hello")
@@ -17,14 +17,13 @@ var messages = make(map[string]translations)
 // a("en", "Farewell, cruel world")
 // a("nl", "Vaarwel, wrede wereld")
 func Definition() (createMessage func(string), addTranslation func(string, string)) {
-	var message *translations
+	var msg message
 	createMessage = func(key string) {
-		t := make(translations)
-		messages[key] = t
-		message = &t
+		msg = make(message, 2)
+		messageStore[key] = msg
 	}
 	addTranslation = func(language string, translation string) {
-		(*message)[language] = translation
+		msg[language] = translation
 	}
 	return
 }
@@ -35,47 +34,60 @@ type languageType struct {
 	Sub  string
 }
 
-var languages = map[string]languageType{}
+var languageCache = make(map[string]languageType, 100)
+
+func getAcceptLanguage(r *http.Request) string {
+	acceptLanguage := r.Header.Get("Accept-Language")
+	return strings.ToLower(acceptLanguage)
+}
 
 // TODO: be more appreciative to the languages listed in the Accept-Language header;
 //   currently only the language first listed is considered
-func Language(r *http.Request) (lang languageType) {
-	accept_language, ok := r.Header.Get("Accept-Language"), false
-	if lang, ok = languages[accept_language]; !ok {
-		first_language := strings.Split(accept_language, ",")[0] // cut other languages
-		first_language = strings.Split(first_language, ";")[0]   // cut the q parameter
-		parts := strings.Split(first_language, "-")
+func Language(r *http.Request) (language languageType) {
+	acceptLanguage := getAcceptLanguage(r)
+	if lang, ok := languageCache[acceptLanguage]; ok {
+		language = lang
+	} else {
+		firstLanguage := strings.Split(acceptLanguage, ",")[0] // cut other languages
+		firstLanguage = strings.Split(firstLanguage, ";")[0]   // cut the q parameter
+		parts := strings.Split(firstLanguage, "-")
 		lang = languageType{
-			Full: first_language,
+			Full: firstLanguage,
 			Main: parts[0],
 		}
 		if len(parts) > 1 {
 			lang.Sub = parts[1]
 		}
-		languages[accept_language] = lang
+		languageCache[acceptLanguage] = lang
+		language = lang
 	}
 	return
 }
 
-type msgFunc func(string) string
+type msgFuncType func(key string) (value string)
 
-var msgs = map[languageType]msgFunc{}
+var msgFuncCache = make(map[string]msgFuncType, 100)
 
-func Msg(r *http.Request) (msg msgFunc) {
-	lang, ok := Language(r), false
-	if msg, ok = msgs[lang]; !ok {
-		msg = func(key string) (value string) {
-			var ok bool
-			if value, ok = messages[key][lang.Full]; !ok {
-				if value, ok = messages[key][lang.Sub]; !ok {
-					if value, ok = messages[key][lang.Main]; !ok {
-						value = "X-" + key
-					}
-				}
+func Msg(r *http.Request) (msgFunc msgFuncType) {
+	acceptLanguage := getAcceptLanguage(r)
+	if f, ok := msgFuncCache[acceptLanguage]; ok {
+		msgFunc = f
+	} else {
+		lang := Language(r)
+		f = func(key string) (value string) {
+			if val, ok := messageStore[key][lang.Full]; ok {
+				value = val
+			} else if val, ok := messageStore[key][lang.Sub]; ok {
+				value = val
+			} else if val, ok := messageStore[key][lang.Main]; ok {
+				value = val
+			} else {
+				value = "X-" + key
 			}
 			return
 		}
-		msgs[lang] = msg
+		msgFuncCache[acceptLanguage] = f
+		msgFunc = f
 	}
 	return
 }
