@@ -29,9 +29,7 @@ import (
 
 type message map[string]string
 
-/*
-Add stores the translation of the message for the given language.
-*/
+// Add stores the translation of the message for the given language.
 func (m message) Add(language, translation string) message {
 	language = strings.ToLower(language)
 	m[language] = translation
@@ -40,11 +38,10 @@ func (m message) Add(language, translation string) message {
 
 var messageStore = make(map[string]message, 500)
 
+// NumLang sets the initial capacity for translations in a new message.
 var NumLang = 2
 
-/*
-New creates a new message, and stores it in memory under the given key.
-*/
+// New creates a new message, and stores it in memory under the given key.
 func New(key string) message {
 	m := make(message, NumLang)
 	messageStore[key] = m
@@ -53,13 +50,10 @@ func New(key string) message {
 
 // LanguageType defines a language.
 type LanguageType struct {
-
 	// e.g. "en-gb"
 	Full string
-
 	// e.g. "en"
 	Main string
-
 	// e.g. "gb"
 	Sub string
 }
