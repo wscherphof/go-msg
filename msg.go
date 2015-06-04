@@ -54,13 +54,13 @@ func New(key string) message {
 // LanguageType defines a language.
 type LanguageType struct {
 
-	// e.g. "en-us"
+	// e.g. "en-gb"
 	Full string
 
 	// e.g. "en"
 	Main string
 
-	// e.g. "us"
+	// e.g. "gb"
 	Sub string
 }
 
