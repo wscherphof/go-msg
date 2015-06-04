@@ -1,5 +1,6 @@
 /*
-Package msg provides a means to manage translations of text labels ("messages") in a web application.
+Package msg provides a means to manage translations of text labels ("messages")
+in a web application.
 
 New messages are defined like this:
 	msg.New("Hello").
@@ -9,11 +10,14 @@ New messages are defined like this:
 	  Add("en", "Hi").
 	  Add("nl", "Hoi")
 
-When you ask for the translation of a certain message key, the user's language is determined from the "Accept-Language" request header.
-Passing the http request pointer to Msg() renders a function to do the key->translation lookup:
+When you ask for the translation of a certain message key, the user's language
+is determined from the "Accept-Language" request header.
+Passing the httprequest pointer to Msg() renders a function to do the
+key-to-translation lookup:
 	translation := Msg(r)("Hi")
 
-You could include the function returned by Msg() to the FuncMap of your template:
+You could include the function returned by Msg() to the FuncMap of your
+template:
 	template.FuncMap{
 		"Msg": msg.Msg(r),
 	},
@@ -85,8 +89,11 @@ func Language(r *http.Request) (language LanguageType) {
 	return
 }
 
-// Msg returns a function that can lookup he translation for e certain message key.
-// The language to use is read from the "Accept-Language" header in the given http request.
+// Msg returns a function that can lookup he translation for e certain message
+// key.
+//
+// The language to use is read from the "Accept-Language" header in the given
+// http request.
 func Msg(r *http.Request) func(key string) (value string) {
 	lang := Language(r)
 	return func(key string) (value string) {
