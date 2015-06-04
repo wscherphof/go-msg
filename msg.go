@@ -61,7 +61,7 @@ type LanguageType struct {
 	Main string
 
 	// e.g. "us"
-	Sub  string
+	Sub string
 }
 
 var languageCache = make(map[string]LanguageType, 100)
@@ -90,13 +90,9 @@ func Language(r *http.Request) (language LanguageType) {
 	return
 }
 
-type msgFunc func(key string) (value string)
-
-/*
-Msg returns a function that can lookup the translation for e certain message key.
-The language to use is read from the "Accept-Language" header in the given http request.
-*/
-func Msg(r *http.Request) msgFunc {
+// Msg returns a function that can lookup he translation for e certain message key.
+// The language to use is read from the "Accept-Language" header in the given http request.
+func Msg(r *http.Request) func(key string) (value string) {
 	lang := Language(r)
 	return func(key string) (value string) {
 		if val, ok := messageStore[key][lang.Full]; ok {
