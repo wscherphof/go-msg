@@ -21,12 +21,10 @@ func (m message) Add(language, translation string) message {
 
 var messageStore = make(map[string]message, 500)
 
-func New(key string, numLang ...int) message {
-	size := 2
-	if len(numLang) > 0 {
-		size = numLang[0]
-	}
-	m := make(message, size)
+var NumLang = 2
+
+func New(key string) message {
+	m := make(message, NumLang)
 	messageStore[key] = m
 	return m
 }
