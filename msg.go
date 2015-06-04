@@ -1,3 +1,9 @@
+// msg.New("Hello").
+//   Add("en", "Hello, world").
+//   Add("nl", "Hallo wereld")
+// msg.New("Bye").
+//   Add("en", "Farewell, cruel world").
+//   Add("nl", "Vaarwel, wrede wereld")
 package msg
 
 import (
@@ -7,25 +13,22 @@ import (
 
 type message map[string]string
 
+func (m message) Add(language, translation string) message {
+	language = strings.ToLower(language)
+	m[language] = translation
+	return m
+}
+
 var messageStore = make(map[string]message, 500)
 
-// var m, a = msg.Definition()
-// m("Hello")
-// a("en", "Hello, world")
-// a("nl", "Hallo wereld")
-// m("Bye")
-// a("en", "Farewell, cruel world")
-// a("nl", "Vaarwel, wrede wereld")
-func Definition() (createMessage func(string), addTranslation func(string, string)) {
-	var msg message
-	createMessage = func(key string) {
-		msg = make(message, 2)
-		messageStore[key] = msg
+func New(key string, numLang ...int) message {
+	size := 2
+	if len(numLang) > 0 {
+		size = numLang[0]
 	}
-	addTranslation = func(language string, translation string) {
-		msg[language] = translation
-	}
-	return
+	m := make(message, size)
+	messageStore[key] = m
+	return m
 }
 
 type languageType struct {
@@ -36,15 +39,11 @@ type languageType struct {
 
 var languageCache = make(map[string]languageType, 100)
 
-func getAcceptLanguage(r *http.Request) string {
-	acceptLanguage := r.Header.Get("Accept-Language")
-	return strings.ToLower(acceptLanguage)
-}
-
 // TODO: be more appreciative to the languages listed in the Accept-Language header;
 //   currently only the language first listed is considered
 func Language(r *http.Request) (language languageType) {
-	acceptLanguage := getAcceptLanguage(r)
+	acceptLanguage := r.Header.Get("Accept-Language")
+	acceptLanguage = strings.ToLower(acceptLanguage)
 	if lang, ok := languageCache[acceptLanguage]; ok {
 		language = lang
 	} else {
@@ -64,30 +63,20 @@ func Language(r *http.Request) (language languageType) {
 	return
 }
 
-type msgFuncType func(key string) (value string)
+type msgFunc func(key string) (value string)
 
-var msgFuncCache = make(map[string]msgFuncType, 100)
-
-func Msg(r *http.Request) (msgFunc msgFuncType) {
-	acceptLanguage := getAcceptLanguage(r)
-	if f, ok := msgFuncCache[acceptLanguage]; ok {
-		msgFunc = f
-	} else {
-		lang := Language(r)
-		f = func(key string) (value string) {
-			if val, ok := messageStore[key][lang.Full]; ok {
-				value = val
-			} else if val, ok := messageStore[key][lang.Sub]; ok {
-				value = val
-			} else if val, ok := messageStore[key][lang.Main]; ok {
-				value = val
-			} else {
-				value = "X-" + key
-			}
-			return
+func Msg(r *http.Request) msgFunc {
+	lang := Language(r)
+	return func(key string) (value string) {
+		if val, ok := messageStore[key][lang.Full]; ok {
+			value = val
+		} else if val, ok := messageStore[key][lang.Sub]; ok {
+			value = val
+		} else if val, ok := messageStore[key][lang.Main]; ok {
+			value = val
+		} else {
+			value = "X-" + key
 		}
-		msgFuncCache[acceptLanguage] = f
-		msgFunc = f
+		return
 	}
-	return
 }
