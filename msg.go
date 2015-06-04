@@ -1,9 +1,25 @@
-// msg.New("Hello").
-//   Add("en", "Hello, world").
-//   Add("nl", "Hallo wereld")
-// msg.New("Bye").
-//   Add("en", "Farewell, cruel world").
-//   Add("nl", "Vaarwel, wrede wereld")
+/*
+Package msg provides a means to manage translations of text labels ("messages") in a web application.
+
+New messages are defined like this:
+	msg.New("Hello").
+	  Add("en", "Hello, world").
+	  Add("nl", "Hallo wereld")
+	msg.New("Hi").
+	  Add("en", "Hi").
+	  Add("nl", "Hoi")
+
+When you ask for the translation of a certain message key, the user's language is determined from the "Accept-Language" request header.
+Passing the http request pointer to Msg() renders a function to do the key->translation lookup:
+	translation := Msg(r)("Hi")
+
+You could include the function returned by Msg() to the FuncMap of your template:
+	template.FuncMap{
+		"Msg": msg.Msg(r),
+	},
+And then use the mapped Msg function inside the template:
+	{{ Msg "Hi" }} {{ .Name }}
+*/
 package msg
 
 import (
@@ -13,6 +29,9 @@ import (
 
 type message map[string]string
 
+/*
+Add stores the translation of the message for the given language.
+*/
 func (m message) Add(language, translation string) message {
 	language = strings.ToLower(language)
 	m[language] = translation
@@ -23,6 +42,9 @@ var messageStore = make(map[string]message, 500)
 
 var NumLang = 2
 
+/*
+New creates a new message, and stores it in memory under the given key.
+*/
 func New(key string) message {
 	m := make(message, NumLang)
 	messageStore[key] = m
@@ -37,8 +59,16 @@ type languageType struct {
 
 var languageCache = make(map[string]languageType, 100)
 
-// TODO: be more appreciative to the languages listed in the Accept-Language header;
-//   currently only the language first listed is considered
+/*
+Language provides a
+	struct {
+		Full string
+		Main string
+		Sub  string
+	}
+based on the first language in the "Accept-Language" header in the given http request.
+E.g. for "en-gb", Full is "en-gb", Main is "en", Sub is "gb"
+*/
 func Language(r *http.Request) (language languageType) {
 	acceptLanguage := r.Header.Get("Accept-Language")
 	acceptLanguage = strings.ToLower(acceptLanguage)
@@ -63,6 +93,10 @@ func Language(r *http.Request) (language languageType) {
 
 type msgFunc func(key string) (value string)
 
+/*
+Msg returns a function that can lookup the translation for e certain message key.
+The language to use is read from the "Accept-Language" header in the given http request.
+*/
 func Msg(r *http.Request) msgFunc {
 	lang := Language(r)
 	return func(key string) (value string) {
