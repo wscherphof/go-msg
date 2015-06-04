@@ -27,23 +27,24 @@ import (
 	"strings"
 )
 
-type message map[string]string
+// Message holds the translations for a message key.
+type Message map[string]string
 
 // Add stores the translation of the message for the given language.
-func (m message) Add(language, translation string) message {
+func (m Message) Add(language, translation string) Message {
 	language = strings.ToLower(language)
 	m[language] = translation
 	return m
 }
 
-var messageStore = make(map[string]message, 500)
+var messageStore = make(map[string]Message, 500)
 
 // NumLang sets the initial capacity for translations in a new message.
 var NumLang = 2
 
 // New creates a new message, and stores it in memory under the given key.
-func New(key string) message {
-	m := make(message, NumLang)
+func New(key string) Message {
+	m := make(Message, NumLang)
 	messageStore[key] = m
 	return m
 }
