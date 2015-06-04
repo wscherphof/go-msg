@@ -51,24 +51,23 @@ func New(key string) message {
 	return m
 }
 
+// LanguageType defines a language.
 type LanguageType struct {
+
+	// e.g. "en-us"
 	Full string
+
+	// e.g. "en"
 	Main string
+
+	// e.g. "us"
 	Sub  string
 }
 
 var languageCache = make(map[string]LanguageType, 100)
 
-/*
-Language provides a
-	struct {
-		Full string
-		Main string
-		Sub  string
-	}
-based on the first language in the "Accept-Language" header in the given http request.
-E.g. for "en-gb", Full is "en-gb", Main is "en", Sub is "gb"
-*/
+// Language provides the first language in the "Accept-Language" header in the
+// given http request.
 func Language(r *http.Request) (language LanguageType) {
 	acceptLanguage := r.Header.Get("Accept-Language")
 	acceptLanguage = strings.ToLower(acceptLanguage)
