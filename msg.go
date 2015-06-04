@@ -51,13 +51,13 @@ func New(key string) message {
 	return m
 }
 
-type languageType struct {
+type LanguageType struct {
 	Full string
 	Main string
 	Sub  string
 }
 
-var languageCache = make(map[string]languageType, 100)
+var languageCache = make(map[string]LanguageType, 100)
 
 /*
 Language provides a
@@ -69,7 +69,7 @@ Language provides a
 based on the first language in the "Accept-Language" header in the given http request.
 E.g. for "en-gb", Full is "en-gb", Main is "en", Sub is "gb"
 */
-func Language(r *http.Request) (language languageType) {
+func Language(r *http.Request) (language LanguageType) {
 	acceptLanguage := r.Header.Get("Accept-Language")
 	acceptLanguage = strings.ToLower(acceptLanguage)
 	if lang, ok := languageCache[acceptLanguage]; ok {
@@ -78,7 +78,7 @@ func Language(r *http.Request) (language languageType) {
 		firstLanguage := strings.Split(acceptLanguage, ",")[0] // cut other languages
 		firstLanguage = strings.Split(firstLanguage, ";")[0]   // cut the q parameter
 		parts := strings.Split(firstLanguage, "-")
-		lang = languageType{
+		lang = LanguageType{
 			Full: firstLanguage,
 			Main: parts[0],
 		}
