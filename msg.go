@@ -94,18 +94,15 @@ func Language(r *http.Request) (language LanguageType) {
 //
 // The language to use is read from the "Accept-Language" header in the given
 // http request.
-func Msg(r *http.Request) func(key string) (value string) {
-	lang := Language(r)
-	return func(key string) (value string) {
-		if val, ok := messageStore[key][lang.Full]; ok {
-			value = val
-		} else if val, ok := messageStore[key][lang.Sub]; ok {
-			value = val
-		} else if val, ok := messageStore[key][lang.Main]; ok {
-			value = val
-		} else {
-			value = "X-" + key
-		}
-		return
+func Msg(lang LanguageType, key string) (value string) {
+	if val, ok := messageStore[key][lang.Full]; ok {
+		value = val
+	} else if val, ok := messageStore[key][lang.Sub]; ok {
+		value = val
+	} else if val, ok := messageStore[key][lang.Main]; ok {
+		value = val
+	} else {
+		value = "X-" + key
 	}
+	return
 }
