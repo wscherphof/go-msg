@@ -89,11 +89,8 @@ func Language(r *http.Request) (language LanguageType) {
 	return
 }
 
-// Msg returns a function that can lookup he translation for e certain message
-// key.
-//
-// The language to use is read from the "Accept-Language" header in the given
-// http request.
+// Msg returns a function that looks up the translation for a certain message
+// key in the given language.
 func Msg(lang LanguageType, key string) (value string) {
 	if val, ok := messageStore[key][lang.Full]; ok {
 		value = val
