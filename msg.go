@@ -34,8 +34,8 @@ import (
 // Message holds the translations for a message key.
 type Message map[string]string
 
-// Add stores the translation of the message for the given language.
-func (m Message) Add(language, translation string) Message {
+// Set stores the translation of the message for the given language.
+func (m Message) Set(language, translation string) Message {
 	language = strings.ToLower(language)
 	m[language] = translation
 	return m
