@@ -46,11 +46,16 @@ var messageStore = make(map[string]Message, 500)
 // NumLang sets the initial capacity for translations in a new message.
 var NumLang = 2
 
-// New creates a new message, and stores it in memory under the given key.
-func New(key string) Message {
-	m := make(Message, NumLang)
-	messageStore[key] = m
-	return m
+// Key returns the message stored under the given key, if it doesn't exist yet,
+// it gets created.
+func Key(key string) (message Message) {
+	if m, ok := messageStore[key]; ok {
+		message = m
+	} else {
+		message = make(Message, NumLang)
+		messageStore[key] = message
+	}
+	return
 }
 
 // LanguageType defines a language.
