@@ -100,10 +100,14 @@ func (l *LanguageType) Parse(s string) {
 
 var languageCache = make(map[string][]*LanguageType, 100)
 
-func headerLangs(r *http.Request) []*LanguageType {
+type msgType struct {
+	languages []*LanguageType
+}
+
+func Translator(r *http.Request) *msgType {
 	acceptLanguage := strings.ToLower(r.Header.Get("Accept-Language"))
 	if cached, ok := languageCache[acceptLanguage]; ok {
-		return cached
+		return &msgType{cached}
 	}
 	langStrings := strings.Split(acceptLanguage, ",")
 	languageCache[acceptLanguage] = make([]*LanguageType, len(langStrings))
@@ -113,19 +117,7 @@ func headerLangs(r *http.Request) []*LanguageType {
 		lang.Parse(langString)
 		languageCache[acceptLanguage][i] = lang
 	}
-	return languageCache[acceptLanguage]
-}
-
-// Language provides the first language in the "Accept-Language" header in the
-// given http request.
-func Language(r *http.Request) (language *LanguageType) {
-	languages := headerLangs(r)
-	if len(languages) > 0 {
-		language = languages[0]
-	} else {
-		language = defaultLanguage
-	}
-	return
+	return &msgType{languageCache[acceptLanguage]}
 }
 
 func translate(key string, language *LanguageType) (translation string) {
@@ -139,14 +131,11 @@ func translate(key string, language *LanguageType) (translation string) {
 	return
 }
 
-// Msg looks up the translation for a message, using the
-// language matching the Accept-Language header in the request.
-func Msg(r *http.Request, key string) (translation string) {
-	languages := headerLangs(r)
+func (m *msgType) Get(key string) (translation string) {
 	if key == "" {
 		return ""
 	}
-	for _, language := range languages {
+	for _, language := range m.languages {
 		if translation = translate(key, language); translation != "" {
 			return
 		}
@@ -160,6 +149,17 @@ func Msg(r *http.Request, key string) (translation string) {
 		if !production {
 			translation = "X-" + translation
 		}
+	}
+	return
+}
+
+// Language provides the first language in the "Accept-Language" header in the
+// given http request.
+func (m *msgType) Language() (language *LanguageType) {
+	if len(m.languages) > 0 {
+		language = m.languages[0]
+	} else {
+		language = defaultLanguage
 	}
 	return
 }
