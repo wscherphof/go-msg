@@ -144,6 +144,9 @@ func translate(key string, language *LanguageType) (translation string) {
 func Msg(r *http.Request) func(key string) (translation string) {
 	languages := headerLangs(r)
 	return func(key string) (translation string) {
+		if key == "" {
+			return ""
+		}
 		for _, language := range languages {
 			if translation = translate(key, language); translation != "" {
 				return
