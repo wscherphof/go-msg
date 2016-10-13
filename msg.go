@@ -10,28 +10,21 @@ New messages are defined like this:
 	  Set("en", "Hi").
 	  Set("nl", "Hoi")
 
-When you ask for the translation of a certain message key, the user's language
-is determined from the "Accept-Language" request header.
-Passing the http.Request pointer to Msg() renders a function to do the
-key-to-translation lookup:
-	translation := Msg(r)("Hi")
-
-You could include the function returned by Msg() to the FuncMap of your
-template:
-	template.FuncMap{
-		"Msg": msg.Msg(r),
-	},
-And then use the mapped Msg function inside the template:
-	{{Msg "Hi"}} {{.name}}
-
-If no translation is found, the message Key is used as a fallback.
+The user's language is determined from the "Accept-Language" request header.
+Pass the http.Request pointer to Translator():
+	t := msg.Translator(r)
+Then get the translation:
+	message := t.Get("Hi")
 
 Environment variables:
-MSG_DEFAULT: determines the default language to use, if no translation is found
+- MSG_DEFAULT: determines the default language to use, if no translation is found
 matching the Accept-Language header. The default value for MSG_DEFAULT is "en".
-GO_ENV: if not set to "production", then for testing purpoeses, translations
-that used the default language get prepended with "D-", and failed translations,
-that used the Key fallback, get prepended with "X-".
+- GO_ENV: if not set to "production", then translations that resorted to the
+default language get prepended with "D-", and failed translations, falling back
+to the message key, get prepended with "X-".
+
+Messages and Translators are stored in memory. Translators are cached on their
+Accept-Language header value.
 */
 package msg
 
@@ -104,6 +97,8 @@ type translatorType struct {
 	languages []*LanguageType
 }
 
+// Translator returns an object that knows how to lookup the translation for a
+// message.
 func Translator(r *http.Request) *translatorType {
 	acceptLanguage := strings.ToLower(r.Header.Get("Accept-Language"))
 	if cached, ok := translatorCache[acceptLanguage]; ok {
@@ -132,6 +127,7 @@ func translate(key string, language *LanguageType) (translation string) {
 	return
 }
 
+// Get returns the translation for a message.
 func (t *translatorType) Get(key string) (translation string) {
 	if key == "" {
 		return ""
