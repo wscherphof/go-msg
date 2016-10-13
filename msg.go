@@ -98,26 +98,27 @@ func (l *LanguageType) Parse(s string) {
 	return
 }
 
-var languageCache = make(map[string][]*LanguageType, 100)
+var translatorCache = make(map[string]*translatorType, 100)
 
-type msgType struct {
+type translatorType struct {
 	languages []*LanguageType
 }
 
-func Translator(r *http.Request) *msgType {
+func Translator(r *http.Request) *translatorType {
 	acceptLanguage := strings.ToLower(r.Header.Get("Accept-Language"))
-	if cached, ok := languageCache[acceptLanguage]; ok {
-		return &msgType{cached}
+	if cached, ok := translatorCache[acceptLanguage]; ok {
+		return cached
 	}
 	langStrings := strings.Split(acceptLanguage, ",")
-	languageCache[acceptLanguage] = make([]*LanguageType, len(langStrings))
+	t := &translatorType{make([]*LanguageType, len(langStrings))}
 	for i, v := range langStrings {
 		langString := strings.Split(v, ";")[0] // cut the q parameter
 		lang := &LanguageType{}
 		lang.Parse(langString)
-		languageCache[acceptLanguage][i] = lang
+		t.languages[i] = lang
 	}
-	return &msgType{languageCache[acceptLanguage]}
+	translatorCache[acceptLanguage] = t
+	return t
 }
 
 func translate(key string, language *LanguageType) (translation string) {
@@ -131,11 +132,11 @@ func translate(key string, language *LanguageType) (translation string) {
 	return
 }
 
-func (m *msgType) Get(key string) (translation string) {
+func (t *translatorType) Get(key string) (translation string) {
 	if key == "" {
 		return ""
 	}
-	for _, language := range m.languages {
+	for _, language := range t.languages {
 		if translation = translate(key, language); translation != "" {
 			return
 		}
@@ -155,9 +156,9 @@ func (m *msgType) Get(key string) (translation string) {
 
 // Language provides the first language in the "Accept-Language" header in the
 // given http request.
-func (m *msgType) Language() (language *LanguageType) {
-	if len(m.languages) > 0 {
-		language = m.languages[0]
+func (t *translatorType) Language() (language *LanguageType) {
+	if len(t.languages) > 0 {
+		language = t.languages[0]
 	} else {
 		language = defaultLanguage
 	}
