@@ -36,43 +36,41 @@ import (
 
 var (
 	production      = (env.Get("GO_ENV", "") == "production")
-	defaultLanguage = &LanguageType{}
+	defaultLanguage = &languageType{}
 )
 
 func init() {
-	defaultLanguage.Parse(env.Get("MSG_DEFAULT", "en"))
+	defaultLanguage.parse(env.Get("MSG_DEFAULT", "en"))
 }
 
-// MessageType holds the translations for a message key.
-type MessageType map[string]string
+type messageType map[string]string
 
 // Set stores the translation of the message for the given language. Any old
 // value is overwritten.
-func (m MessageType) Set(language, translation string) MessageType {
+func (m messageType) Set(language, translation string) messageType {
 	language = strings.ToLower(language)
 	m[language] = translation
 	return m
 }
 
-var messageStore = make(map[string]MessageType, 500)
+var messageStore = make(map[string]messageType, 500)
 
 // NumLang sets the initial capacity for translations in a new message.
 var NumLang = 10
 
 // Key returns the message stored under the given key, if it doesn't exist yet,
 // it gets created.
-func Key(key string) (message MessageType) {
+func Key(key string) (message messageType) {
 	if m, ok := messageStore[key]; ok {
 		message = m
 	} else {
-		message = make(MessageType, NumLang)
+		message = make(messageType, NumLang)
 		messageStore[key] = message
 	}
 	return
 }
 
-// LanguageType defines a language.
-type LanguageType struct {
+type languageType struct {
 	// e.g. "en-gb"
 	Full string
 	// e.g. "en"
@@ -81,7 +79,7 @@ type LanguageType struct {
 	Sub string
 }
 
-func (l *LanguageType) Parse(s string) {
+func (l *languageType) parse(s string) {
 	parts := strings.Split(s, "-")
 	l.Full = s
 	l.Main = parts[0]
@@ -94,7 +92,7 @@ func (l *LanguageType) Parse(s string) {
 var translatorCache = make(map[string]*translatorType, 100)
 
 type translatorType struct {
-	languages []*LanguageType
+	languages []*languageType
 }
 
 // Translator returns an object that knows how to lookup the translation for a
@@ -105,18 +103,18 @@ func Translator(r *http.Request) *translatorType {
 		return cached
 	}
 	langStrings := strings.Split(acceptLanguage, ",")
-	t := &translatorType{make([]*LanguageType, len(langStrings))}
+	t := &translatorType{make([]*languageType, len(langStrings))}
 	for i, v := range langStrings {
 		langString := strings.Split(v, ";")[0] // cut the q parameter
-		lang := &LanguageType{}
-		lang.Parse(langString)
+		lang := &languageType{}
+		lang.parse(langString)
 		t.languages[i] = lang
 	}
 	translatorCache[acceptLanguage] = t
 	return t
 }
 
-func translate(key string, language *LanguageType) (translation string) {
+func translate(key string, language *languageType) (translation string) {
 	if val, ok := messageStore[key][language.Full]; ok {
 		translation = val
 	} else if val, ok := messageStore[key][language.Sub]; ok {
@@ -152,7 +150,7 @@ func (t *translatorType) Get(key string) (translation string) {
 
 // Language provides the first language in the "Accept-Language" header in the
 // given http request.
-func (t *translatorType) Language() (language *LanguageType) {
+func (t *translatorType) Language() (language *languageType) {
 	if len(t.languages) > 0 {
 		language = t.languages[0]
 	} else {
