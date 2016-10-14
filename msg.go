@@ -43,10 +43,15 @@ func init() {
 	defaultLanguage.parse(env.Get("MSG_DEFAULT", "en"))
 }
 
+/*
+MessageType hold the translations for a message.
+*/
 type MessageType map[string]string
 
-// Set stores the translation of the message for the given language. Any old
-// value is overwritten.
+/*
+Set stores the translation of the message for the given language. Any old
+value is overwritten.
+*/
 func (m MessageType) Set(language, translation string) MessageType {
 	language = strings.ToLower(language)
 	m[language] = translation
@@ -55,11 +60,15 @@ func (m MessageType) Set(language, translation string) MessageType {
 
 var messageStore = make(map[string]MessageType, 500)
 
-// NumLang sets the initial capacity for translations in a new message.
+/*
+NumLang sets the initial capacity for translations in a new message.
+*/
 var NumLang = 10
 
-// Key returns the message stored under the given key, if it doesn't exist yet,
-// it gets created.
+/*
+Key returns the message stored under the given key, if it doesn't exist yet,
+*/
+it gets created.
 func Key(key string) (message MessageType) {
 	if m, ok := messageStore[key]; ok {
 		message = m
@@ -91,12 +100,16 @@ func (l *languageType) parse(s string) {
 
 var translatorCache = make(map[string]*TranslatorType, 100)
 
+/*
+TranslatorType knows about translations for the user's accepted languages.
+*/
 type TranslatorType struct {
 	languages []*languageType
 }
 
-// Translator returns an object that knows how to lookup the translation for a
-// message.
+/*
+Translator returns a (cached) TranslatorType.
+*/
 func Translator(r *http.Request) *TranslatorType {
 	acceptLanguage := strings.ToLower(r.Header.Get("Accept-Language"))
 	if cached, ok := translatorCache[acceptLanguage]; ok {
@@ -114,7 +127,9 @@ func Translator(r *http.Request) *TranslatorType {
 	return t
 }
 
-// Get returns the translation for a message.
+/*
+Get returns the translation for a message.
+*/
 func (t *TranslatorType) Get(key string) (translation string) {
 	if key == "" {
 		return ""
