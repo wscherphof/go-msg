@@ -16,9 +16,11 @@ Then get the translation:
 	message := t.Get("Hi")
 
 Environment variables:
-- MSG_DEFAULT: determines the default language to use, if no translation is found
+
+MSG_DEFAULT: determines the default language to use, if no translation is found
 matching the Accept-Language header. The default value for MSG_DEFAULT is "en".
-- GO_ENV: if not set to "production", then translations that resorted to the
+
+GO_ENV: if not set to "production", then translations that resorted to the
 default language get prepended with "D-", and failed translations, falling back
 to the message key, get prepended with "X-".
 
