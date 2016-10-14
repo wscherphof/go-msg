@@ -169,7 +169,7 @@ func translate(key string, language *languageType) (translation string) {
 File searches for an "inner" template fitting the "base" template, matching
 the user's accepted languages.
 
-Template names are without file name extension. The default extension is "ace".
+Template names are without file name extension. The default extension is ".ace".
 
 Example: if MSG_DEFAULT is "en", and the Accept-Languages header is empty,
 	msg.File("/resources/templates", "home", "HomePage", ".tpl")
