@@ -67,8 +67,8 @@ var NumLang = 10
 
 /*
 Key returns the message stored under the given key, if it doesn't exist yet,
-*/
 it gets created.
+*/
 func Key(key string) (message MessageType) {
 	if m, ok := messageStore[key]; ok {
 		message = m
